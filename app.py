@@ -10,7 +10,7 @@ os.environ["REQUESTS_CA_BUNDLE"] = certifi.where()
 import json
 import uuid
 from pathlib import Path
-
+from langgraph.types import Command
 import uvicorn
 from fastapi import FastAPI, Request, UploadFile, File, Form
 from fastapi.responses import StreamingResponse, JSONResponse
@@ -211,9 +211,6 @@ def extract_text_from_chunk(chunk) -> str:
         return "".join(text_parts)
 
     return ""
-
-
-
 @app.post("/chat/stream")
 async def chat_stream(request: Request):
     try:
@@ -271,6 +268,28 @@ async def chat_stream(request: Request):
                     final_answer += token
                     yield sse_data({"token": token})
 
+            # Extraction sécurisée de l'interruption LangGraph
+            try:
+                state = agent.get_state(config)
+                if state.next:
+                    interrupt_msg = "Human Approval Required"
+                    if hasattr(state, "tasks") and state.tasks:
+                        for task in state.tasks:
+                            interrupts = getattr(task, "interrupts", ())
+                            if interrupts:
+                                intr = interrupts[0]
+                                interrupt_msg = intr.value if hasattr(intr, "value") else str(intr)
+                                break
+
+                    yield sse_data({
+                        "interrupt": True,
+                        "message": interrupt_msg,
+                        "thread_id": thread_id
+                    })
+                    return
+            except Exception as state_err:
+                print(f"Error checking graph state: {state_err}")
+
             if final_answer.strip():
                 save_chat_message(thread_id, "assistant", final_answer)
 
@@ -291,9 +310,80 @@ async def chat_stream(request: Request):
     )
 
 
+@app.post("/approve")
+async def approve_action(request: Request):
+    try:
+        data = await request.json()
+    except Exception:
+        return JSONResponse(
+            {"error": "Invalid JSON body."},
+            status_code=400
+        )
 
+    thread_id = data.get("thread_id")
+    decision = data.get("decision")
+    selected_model = data.get("model", "gemini-2.5-flash")
 
+    if not thread_id:
+        return JSONResponse(
+            {"error": "thread_id is required."},
+            status_code=400
+        )
 
+    if decision not in ["yes", "no"]:
+        return JSONResponse(
+            {"error": "decision must be either 'yes' or 'no'."},
+            status_code=400
+        )
+
+    agent = get_agent(selected_model)
+    config = {
+        "configurable": {
+            "thread_id": thread_id
+        }
+    }
+
+    state = agent.get_state(config)
+    if not state.values:
+        return JSONResponse(
+            {"error": f"No active state found for thread_id: {thread_id}"},
+            status_code=404
+        )
+
+    final_answer = ""
+    try:
+        for chunk, metadata in agent.stream(
+            Command(resume=decision),
+            config=config,
+            stream_mode="messages"
+        ):
+            if not should_stream_chunk(chunk, metadata):
+                continue
+
+            token = extract_text_from_chunk(chunk)
+            if token:
+                final_answer += token
+
+        if not final_answer.strip():
+            updated_state = agent.get_state(config)
+            messages = updated_state.values.get("messages", [])
+            if messages and isinstance(messages[-1], AIMessage):
+                final_answer = messages[-1].content
+
+        if final_answer.strip():
+            save_chat_message(thread_id, "assistant", final_answer)
+
+        return JSONResponse({
+            "success": True,
+            "thread_id": thread_id,
+            "message": final_answer
+        })
+
+    except Exception as e:
+        return JSONResponse(
+            {"error": f"Failed to resume workflow: {str(e)}"},
+            status_code=500
+        )
 if __name__ == "__main__":
    
     uvicorn.run(

@@ -168,7 +168,7 @@ def search_memory(thread_id: str, query: str):
     try:
         memories = (
             db.query(LongTermMemory)
-            .filter(LongTermMemory.thread_id == thread_id)
+            # .filter(LongTermMemory.thread_id == thread_id)
             .order_by(LongTermMemory.created_at.desc())
             .limit(20)
             .all()
