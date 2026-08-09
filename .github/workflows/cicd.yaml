@@ -1,4 +1,4 @@
-name: Streamlit AWS CI/CD
+name: Fastapi AWS CI/CD
 
 on:
   push:
