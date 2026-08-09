@@ -54,7 +54,7 @@ def calculator(expression: str) -> str:
 
 
 @tool
-def search_uploaded_documents(query: str) -> str:
+def search_uploaded_documents(query: str,k:int) -> str:
     """
     Search uploaded documents for relevant information.
     Use this when the user asks about uploaded PDFs, DOCX, TXT, notes, files, or documents.
@@ -62,7 +62,9 @@ def search_uploaded_documents(query: str) -> str:
 
     return retrieve_from_rag(
         query=query,
-        thread_id=CURRENT_THREAD_ID
+        k=k,
+        thread_id=CURRENT_THREAD_ID,
+
     )
 
 

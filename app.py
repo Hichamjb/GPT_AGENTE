@@ -10,7 +10,7 @@ os.environ["REQUESTS_CA_BUNDLE"] = certifi.where()
 import json
 import uuid
 from pathlib import Path
-from langgraph.types import Command
+
 import uvicorn
 from fastapi import FastAPI, Request, UploadFile, File, Form
 from fastapi.responses import StreamingResponse, JSONResponse
@@ -22,6 +22,7 @@ from langchain_core.messages import (
     AIMessageChunk,
     ToolMessage
 )
+from langgraph.types import Command  # <--- IMPORT REQUIS POUR INTERRUPT/RESUME
 
 from agent import get_agent
 from database import (
@@ -29,37 +30,30 @@ from database import (
     save_chat_message,
     get_chat_history,
     create_or_update_conversation,
-    list_conversations)
+    list_conversations
+)
 
 from rag import add_document_to_rag
 from tools import set_current_thread_id
 
 
 app = FastAPI()
-
 templates = Jinja2Templates(directory="templates")
 
 Path("uploads").mkdir(exist_ok=True)
 Path("data").mkdir(exist_ok=True)
-
 
 init_db()
 
 
 @app.get("/")
 async def home(request: Request):
-    return templates.TemplateResponse(
-        request=request,
-        name="index.html",
-        context={}
-    )
-
+    return templates.TemplateResponse(request=request, name="index.html", context={})
 
 
 @app.get("/conversations")
 async def conversations():
     items = list_conversations()
-
     return {
         "conversations": [
             {
@@ -73,11 +67,9 @@ async def conversations():
     }
 
 
-
 @app.get("/history/{thread_id}")
 async def history(thread_id: str):
     messages = get_chat_history(thread_id)
-
     return {
         "messages": [
             {
@@ -89,8 +81,6 @@ async def history(thread_id: str):
     }
 
 
-
-
 @app.post("/upload")
 async def upload_document(
     file: UploadFile = File(...),
@@ -98,16 +88,12 @@ async def upload_document(
 ):
     try:
         allowed_extensions = [".pdf", ".docx", ".txt", ".md", ".py", ".csv"]
-
         filename = file.filename or "uploaded_file"
         suffix = Path(filename).suffix.lower()
 
         if suffix not in allowed_extensions:
             return JSONResponse(
-                {
-                    "success": False,
-                    "message": "Unsupported file type. Upload PDF, DOCX, TXT, MD, PY, or CSV."
-                },
+                {"success": False, "message": f"Format non supporté."},
                 status_code=400
             )
 
@@ -118,7 +104,7 @@ async def upload_document(
         with open(file_path, "wb") as f:
             f.write(await file.read())
 
-        create_or_update_conversation(thread_id, "Uploaded document")
+        create_or_update_conversation(thread_id, f"Uploaded {filename}")
 
         result = add_document_to_rag(
             file_path=file_path,
@@ -127,154 +113,140 @@ async def upload_document(
 
         return JSONResponse({
             "success": True,
-            "message": f"Uploaded {result['filename']} and created {result['chunks']} chunks."
+            "filename": filename,
+            "message": f"Document indexé avec succès ({result.get('chunks', 0)} chunks)."
         })
 
     except Exception as e:
         return JSONResponse(
-            {
-                "success": False,
-                "message": str(e)
-            },
+            {"success": False, "message": str(e)},
             status_code=500
         )
-
 
 
 def sse_data(payload: dict) -> str:
     return f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
 
 
-def should_stream_chunk(chunk, metadata) -> bool:
-    """
-    This prevents raw tool/search/RAG JSON from appearing in the frontend.
-
-    We only stream normal AI text chunks.
-    We do NOT stream:
-    - ToolMessage
-    - messages from tool nodes
-    - tool call chunks
-    - raw tool outputs
-    """
-
-    metadata = metadata or {}
-
-    node_name = str(metadata.get("langgraph_node", "")).lower()
-
-    if "tool" in node_name:
-        return False
-
-    if isinstance(chunk, ToolMessage):
-        return False
-
-    if not isinstance(chunk, (AIMessage, AIMessageChunk)):
-        return False
-
-    if getattr(chunk, "tool_calls", None):
-        return False
-
-    if getattr(chunk, "invalid_tool_calls", None):
-        return False
-
-    additional_kwargs = getattr(chunk, "additional_kwargs", {}) or {}
-
-    if additional_kwargs.get("tool_calls"):
-        return False
-
-    return True
-
-
 def extract_text_from_chunk(chunk) -> str:
     content = getattr(chunk, "content", "")
-
     if not content:
         return ""
-
     if isinstance(content, str):
         return content
-
     if isinstance(content, list):
         text_parts = []
-
         for item in content:
             if isinstance(item, str):
                 text_parts.append(item)
-
             elif isinstance(item, dict):
                 if item.get("type") == "text" and isinstance(item.get("text"), str):
                     text_parts.append(item["text"])
-                elif isinstance(item.get("text"), str):
-                    text_parts.append(item["text"])
                 elif isinstance(item.get("content"), str):
                     text_parts.append(item["content"])
-
         return "".join(text_parts)
-
     return ""
+
+
 @app.post("/chat/stream")
 async def chat_stream(request: Request):
     try:
         data = await request.json()
     except Exception:
-        return JSONResponse(
-            {"error": "Invalid JSON body."},
-            status_code=400
-        )
+        return JSONResponse({"error": "JSON invalide."}, status_code=400)
 
     user_message = data.get("message", "")
     thread_id = data.get("thread_id", "default")
     selected_model = data.get("model", "gemini-2.5-flash")
 
     if not user_message.strip():
-        return JSONResponse(
-            {"error": "Message is required."},
-            status_code=400
-        )
+        return JSONResponse({"error": "Message requis."}, status_code=400)
 
     agent = get_agent(selected_model)
 
     create_or_update_conversation(thread_id, user_message)
     save_chat_message(thread_id, "user", user_message)
-
     set_current_thread_id(thread_id)
 
-    config = {
-        "configurable": {
-            "thread_id": thread_id
-        }
-    }
+    config = {"configurable": {"thread_id": thread_id}}
 
     def event_generator():
         final_answer = ""
+        tools_started = set()
 
         try:
-            inputs = {
-                "messages": [
-                    HumanMessage(content=user_message)
-                ]
-            }
+            # --- GESTION DE L'INTERRUPTION LANGGRAPH ---
+            state = agent.get_state(config)
 
-            for chunk, metadata in agent.stream(
-                inputs,
-                config=config,
-                stream_mode="messages"
-            ):
-                if not should_stream_chunk(chunk, metadata):
-                    continue
+            if state.next:
+                # Le graphe était en pause (interrupt) : on passe la réponse via Command
+                inputs = Command(resume=user_message)
+            else:
+                # Entrée standard pour un nouveau message
+                inputs = {"messages": [HumanMessage(content=user_message)]}
 
-                token = extract_text_from_chunk(chunk)
+            for chunk, metadata in agent.stream(inputs, config=config, stream_mode="messages"):
+                
+                # 1. Détection d'outils
+                if isinstance(chunk, (AIMessage, AIMessageChunk)):
+                    tool_calls = getattr(chunk, "tool_calls", []) or []
+                    
+                    if not tool_calls and hasattr(chunk, "tool_call_chunks"):
+                        for tc in chunk.tool_call_chunks:
+                            name = tc.get("name")
+                            if name and name not in tools_started:
+                                tools_started.add(name)
+                                yield sse_data({"type": "tool_start", "tool": name})
 
-                if token:
-                    final_answer += token
-                    yield sse_data({"token": token})
+                    for tc in tool_calls:
+                        name = tc.get("name")
+                        if name and name not in tools_started:
+                            tools_started.add(name)
+                            yield sse_data({"type": "tool_start", "tool": name})
 
-            # Extraction sécurisée de l'interruption LangGraph
+                    # Streaming du texte de l'assistant
+                    if not tool_calls and not getattr(chunk, "tool_call_chunks", None):
+                        token = extract_text_from_chunk(chunk)
+                        if token:
+                            final_answer += token
+                            yield sse_data({"type": "token", "token": token})
+
+                # 2. Fin d'exécution de l'outil
+                elif isinstance(chunk, ToolMessage):
+                    tool_name = getattr(chunk, "name", "tool") or "tool"
+                    tool_output = chunk.content
+
+                    if not isinstance(tool_output, str):
+                        try:
+                            tool_output = json.dumps(tool_output, ensure_ascii=False, indent=2)
+                        except Exception:
+                            tool_output = str(tool_output)
+
+                    if tool_name not in tools_started:
+                        yield sse_data({"type": "tool_start", "tool": tool_name})
+                        tools_started.add(tool_name)
+                    # save_chat_message(
+                    #     thread_id=thread_id,
+                    #     role="tool",
+                    #     content=tool_output, # Sera géré ou formaté par la fonction
+                    #     tool_name=tool_name,
+                    #     tool_output=tool_output
+                    # )
+    
+
+                    yield sse_data({
+                        "type": "tool_end",
+                        "tool": tool_name,
+                        "result": tool_output
+                    })
+
+            # 3. Vérification de nouvelles interruptions
             try:
-                state = agent.get_state(config)
-                if state.next:
+                post_state = agent.get_state(config)
+                if post_state.next:
                     interrupt_msg = "Human Approval Required"
-                    if hasattr(state, "tasks") and state.tasks:
-                        for task in state.tasks:
+                    if hasattr(post_state, "tasks") and post_state.tasks:
+                        for task in post_state.tasks:
                             interrupts = getattr(task, "interrupts", ())
                             if interrupts:
                                 intr = interrupts[0]
@@ -282,22 +254,23 @@ async def chat_stream(request: Request):
                                 break
 
                     yield sse_data({
-                        "interrupt": True,
+                        "type": "interrupt",
                         "message": interrupt_msg,
                         "thread_id": thread_id
                     })
                     return
             except Exception as state_err:
-                print(f"Error checking graph state: {state_err}")
+                print(f"Graph state error: {state_err}")
 
             if final_answer.strip():
                 save_chat_message(thread_id, "assistant", final_answer)
 
-            yield sse_data({"done": True})
+            yield sse_data({"type": "done"})
 
         except Exception as e:
-            yield sse_data({"error": str(e)})
-            yield sse_data({"done": True})
+            print(f"Streaming error: {e}")
+            yield sse_data({"type": "error", "error": str(e)})
+            yield sse_data({"type": "done"})
 
     return StreamingResponse(
         event_generator(),
@@ -310,85 +283,5 @@ async def chat_stream(request: Request):
     )
 
 
-@app.post("/approve")
-async def approve_action(request: Request):
-    try:
-        data = await request.json()
-    except Exception:
-        return JSONResponse(
-            {"error": "Invalid JSON body."},
-            status_code=400
-        )
-
-    thread_id = data.get("thread_id")
-    decision = data.get("decision")
-    selected_model = data.get("model", "gemini-2.5-flash")
-
-    if not thread_id:
-        return JSONResponse(
-            {"error": "thread_id is required."},
-            status_code=400
-        )
-
-    if decision not in ["yes", "no"]:
-        return JSONResponse(
-            {"error": "decision must be either 'yes' or 'no'."},
-            status_code=400
-        )
-
-    agent = get_agent(selected_model)
-    config = {
-        "configurable": {
-            "thread_id": thread_id
-        }
-    }
-
-    state = agent.get_state(config)
-    if not state.values:
-        return JSONResponse(
-            {"error": f"No active state found for thread_id: {thread_id}"},
-            status_code=404
-        )
-
-    final_answer = ""
-    try:
-        for chunk, metadata in agent.stream(
-            Command(resume=decision),
-            config=config,
-            stream_mode="messages"
-        ):
-            if not should_stream_chunk(chunk, metadata):
-                continue
-
-            token = extract_text_from_chunk(chunk)
-            if token:
-                final_answer += token
-
-        if not final_answer.strip():
-            updated_state = agent.get_state(config)
-            messages = updated_state.values.get("messages", [])
-            if messages and isinstance(messages[-1], AIMessage):
-                final_answer = messages[-1].content
-
-        if final_answer.strip():
-            save_chat_message(thread_id, "assistant", final_answer)
-
-        return JSONResponse({
-            "success": True,
-            "thread_id": thread_id,
-            "message": final_answer
-        })
-
-    except Exception as e:
-        return JSONResponse(
-            {"error": f"Failed to resume workflow: {str(e)}"},
-            status_code=500
-        )
 if __name__ == "__main__":
-   
-    uvicorn.run(
-        "app:app",
-        host="0.0.0.0",
-        port=8080,
-        reload=True
-    )
+    uvicorn.run("app:app", host="0.0.0.0", port=8080, reload=True)

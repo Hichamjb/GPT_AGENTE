@@ -1,18 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>BappyGPT</title>
+    <title>BappyGPT - Agentic AI Chatbot (HITL)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <style>
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             margin: 0;
-            font-family: Inter, Arial, Helvetica, sans-serif;
+            font-family: Inter, system-ui, -apple-system, sans-serif;
             background: #212121;
             color: #ececec;
             height: 100vh;
@@ -21,20 +19,16 @@
         }
 
         .sidebar {
-            width: 270px;
+            width: 260px;
             background: #171717;
             border-right: 1px solid #2f2f2f;
             display: flex;
             flex-direction: column;
             padding: 12px;
+            color: #ececec;
         }
 
-        .brand {
-            font-size: 18px;
-            font-weight: 700;
-            padding: 12px;
-            margin-bottom: 10px;
-        }
+        .brand { font-size: 18px; font-weight: 700; padding: 12px; margin-bottom: 10px; }
 
         .new-chat {
             border: 1px solid #3f3f3f;
@@ -48,22 +42,11 @@
             margin-bottom: 16px;
         }
 
-        .new-chat:hover {
-            background: #2a2a2a;
-        }
+        .new-chat:hover { background: #2a2a2a; }
 
-        .history-title {
-            color: #999;
-            font-size: 13px;
-            margin: 10px 0;
-            padding-left: 4px;
-        }
+        .history-title { color: #999; font-size: 13px; margin: 10px 0; padding-left: 4px; }
 
-        #conversationList {
-            overflow-y: auto;
-            flex: 1;
-            padding-right: 4px;
-        }
+        #conversationList { overflow-y: auto; flex: 1; }
 
         .history-item {
             padding: 10px;
@@ -77,14 +60,8 @@
             text-overflow: ellipsis;
         }
 
-        .history-item:hover {
-            background: #2a2a2a;
-        }
-
-        .history-item.active {
-            background: #303030;
-            color: #ffffff;
-        }
+        .history-item:hover { background: #2a2a2a; }
+        .history-item.active { background: #303030; color: #ffffff; }
 
         .main {
             flex: 1;
@@ -103,36 +80,25 @@
             padding: 0 24px;
             font-size: 16px;
             font-weight: 600;
+            color: #ececec;
         }
 
-        .status {
-            font-size: 13px;
-            color: #aaa;
-            font-weight: 400;
-        }
+        .status { font-size: 13px; color: #9ca3af; font-weight: 400; }
 
         .chat-container {
             flex: 1;
             overflow-y: auto;
-            padding: 30px 20px 150px;
+            padding: 30px 20px 180px;
         }
 
         .welcome {
             max-width: 760px;
-            margin: 110px auto 0;
+            margin: 80px auto 0;
             text-align: center;
         }
 
-        .welcome h1 {
-            font-size: 34px;
-            margin-bottom: 10px;
-            font-weight: 650;
-        }
-
-        .welcome p {
-            color: #aaa;
-            font-size: 16px;
-        }
+        .welcome h1 { font-size: 32px; margin-bottom: 10px; font-weight: 650; }
+        .welcome p { color: #9ca3af; font-size: 15px; }
 
         .cards {
             display: grid;
@@ -143,163 +109,208 @@
         }
 
         .card {
-            border: 1px solid #3a3a3a;
+            border: 1px solid #383838;
             border-radius: 14px;
             padding: 16px;
-            color: #ccc;
+            color: #d1d5db;
             cursor: pointer;
-            text-align: left;
+            background: #2f2f2f;
         }
 
-        .card:hover {
-            background: #2a2a2a;
-        }
+        .card:hover { background: #383838; }
 
-        .message {
+        /* --- MESSAGES & AVATARS --- */
+
+        .message-row {
             max-width: 820px;
-            margin: 0 auto 28px;
+            margin: 0 auto 20px;
             display: flex;
             gap: 12px;
-            line-height: 1.65;
+            align-items: flex-start;
         }
 
-        .message.user {
-            justify-content: flex-end;
+        .message-row.user { justify-content: flex-end; }
+
+        .message-row.user .user-bubble {
+            background: #2f2f2f;
+            border-radius: 18px;
+            padding: 12px 18px;
+            color: #ececec;
+            font-size: 15px;
+            line-height: 1.5;
+            max-width: 80%;
         }
 
-        .message.assistant {
-            justify-content: flex-start;
-        }
-
-        .message.user .avatar {
-            order: 2;
-        }
-
-        .message.user .message-content {
-            order: 1;
-            background: #303030;
-            border: 1px solid #3f3f3f;
-            border-radius: 18px 18px 4px 18px;
-            padding: 12px 16px;
-            max-width: 70%;
-        }
-
-        .message.assistant .message-content {
-            background: transparent;
-            padding: 0;
-            max-width: 75%;
+        .message-row.assistant .assistant-text {
+            color: #ececec;
+            font-size: 15px;
+            line-height: 1.6;
+            padding-top: 4px;
+            width: 100%;
+            white-space: pre-wrap;
         }
 
         .avatar {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
             flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 13px;
+            font-size: 16px;
             font-weight: bold;
         }
 
-        .user-avatar {
-            background: #5a4fcf;
+        .avatar-user { background: #6366f1; color: white; }
+        .avatar-bot { background: #10b981; color: white; }
+        .avatar-tool { background: #f97316; color: white; }
+
+        /* --- TOOL ACCORDION STYLES --- */
+
+        .tool-row { align-items: flex-start; }
+
+        .tool-box {
+            border: 1px solid #383838;
+            border-radius: 10px;
+            background: #171717;
+            overflow: hidden;
+            font-size: 14px;
+            width: 100%;
         }
 
-        .bot-avatar {
-            background: #10a37f;
-        }
-
-        .message-content {
-            color: #ececec;
-            font-size: 16px;
-            white-space: pre-wrap;
-            overflow-wrap: anywhere;
-        }
-
-        .tool-progress {
-            max-width: 820px;
-            margin: 0 auto 14px;
+        .tool-header {
             display: flex;
-            justify-content: flex-start;
-        }
-
-        .tool-progress-box {
-            display: inline-flex;
             align-items: center;
             gap: 8px;
+            padding: 10px 14px;
+            cursor: pointer;
+            user-select: none;
             background: #2a2a2a;
-            border: 1px solid #3f3f3f;
-            color: #cfcfcf;
-            padding: 8px 12px;
-            border-radius: 12px;
+            font-weight: 500;
+            color: #d1d5db;
+            transition: background 0.2s;
+        }
+
+        .tool-header:hover { background: #333333; }
+
+        .tool-chevron {
+            display: inline-block;
+            font-size: 11px;
+            transition: transform 0.2s ease;
+            margin-right: 4px;
+        }
+
+        .tool-header.collapsed .tool-chevron { transform: rotate(-90deg); }
+
+        .tool-content {
+            padding: 12px 14px;
+            border-top: 1px solid #383838;
+            background: #171717;
             font-size: 13px;
+            color: #d1d5db;
+            white-space: pre-wrap;
+            word-break: break-word;
         }
 
-        .tool-spinner {
-            width: 13px;
-            height: 13px;
-            border: 2px solid #555;
-            border-top: 2px solid #10a37f;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+        .tool-output-text {
+            margin: 6px 0 0;
+            background: #0d0d0d;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            color: #a7f3d0;
+            max-height: 250px;
+            overflow-y: auto;
         }
 
-        .tool-check {
-            color: #10a37f;
-            font-weight: bold;
+        /* --- HUMAN IN THE LOOP (HITL) STYLES --- */
+
+        .hitl-box {
+            border: 1px solid #f59e0b;
+            background: #271e05;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 12px 0 20px 48px;
+            max-width: 820px;
+            color: #fef3c7;
         }
 
-        @keyframes spin {
-            from {
-                transform: rotate(0deg);
-            }
-
-            to {
-                transform: rotate(360deg);
-            }
+        .hitl-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            font-size: 15px;
+            color: #fbbf24;
+            margin-bottom: 8px;
         }
+
+        .hitl-body {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #fef3c7;
+            margin-bottom: 14px;
+        }
+
+        .hitl-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .hitl-btn {
+            padding: 8px 18px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .hitl-btn-approve { background: #10b981; color: white; }
+        .hitl-btn-approve:hover { background: #059669; }
+
+        .hitl-btn-reject { background: #ef4444; color: white; }
+        .hitl-btn-reject:hover { background: #dc2626; }
+
+        .hitl-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* --- INPUT AREA --- */
 
         .input-area {
             position: fixed;
             bottom: 0;
-            left: 270px;
+            left: 260px;
             right: 0;
-            background: linear-gradient(to top, #212121 82%, transparent);
-            padding: 24px 20px;
+            background: linear-gradient(to top, #212121 80%, transparent);
+            padding: 20px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .listening-indicator {
+            font-size: 12px;
+            color: #ef4444;
+            margin-bottom: 6px;
+            display: none;
+            font-weight: 500;
         }
 
         .input-wrapper {
+            width: 100%;
             max-width: 820px;
-            margin: 0 auto;
-            background: #303030;
-            border: 1px solid #444;
-            border-radius: 18px;
-            display: flex;
-            align-items: flex-end;
-            padding: 12px;
-            box-shadow: 0 0 18px rgba(0, 0, 0, 0.25);
-        }
-
-        .attach-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            border: none;
-            background: transparent;
-            color: #cfcfcf;
-            cursor: pointer;
-            font-size: 20px;
-            margin-right: 6px;
+            background: #2f2f2f;
+            border: 1px solid #383838;
+            border-radius: 24px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .attach-btn:hover {
-            background: #3a3a3a;
-            color: #ffffff;
+            padding: 8px 14px;
+            gap: 8px;
         }
 
         textarea {
@@ -309,229 +320,60 @@
             outline: none;
             resize: none;
             color: #ececec;
-            font-size: 16px;
-            min-height: 30px;
-            max-height: 170px;
-            line-height: 1.5;
-            padding: 7px;
+            font-size: 15px;
+            min-height: 24px;
+            max-height: 150px;
+            padding: 4px;
         }
 
-        textarea::placeholder {
-            color: #aaa;
-        }
-
-        .model-select {
-            height: 40px;
-            max-width: 135px;
-            background: #262626;
-            color: #ececec;
-            border: 1px solid #444;
-            border-radius: 12px;
-            padding: 0 8px;
-            margin-left: 8px;
-            outline: none;
-            font-size: 13px;
-            cursor: pointer;
-            flex-shrink: 0;
-        }
-
-        .model-select:hover {
-            background: #333333;
-        }
-
-        .model-select option {
-            background: #262626;
-            color: #ececec;
-        }
-
-        .mic-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            border: none;
+        .icon-btn {
             background: transparent;
-            color: #cfcfcf;
+            border: none;
+            color: #9ca3af;
             cursor: pointer;
-            font-size: 18px;
-            margin-left: 8px;
+            padding: 6px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-shrink: 0;
+            font-size: 18px;
+            transition: all 0.2s;
         }
 
-        .mic-btn:hover {
-            background: #3a3a3a;
-            color: #ffffff;
+        .icon-btn:hover { color: #ffffff; background: #383838; }
+
+        .mic-btn.active {
+            background: #ef4444 !important;
+            color: white !important;
+            animation: pulse 1.5s infinite;
         }
 
-        .mic-btn.recording {
-            background: #ef4444;
-            color: #ffffff;
-            animation: pulseMic 1.2s infinite;
-        }
-
-        @keyframes pulseMic {
-            0% {
-                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5);
-            }
-
-            70% {
-                box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
-            }
-
-            100% {
-                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
-            }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
         }
 
         .send-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
             border: none;
-            background: #ececec;
-            color: #111;
-            cursor: pointer;
-            font-size: 18px;
-            margin-left: 8px;
-            flex-shrink: 0;
-        }
-
-        .send-btn:hover {
             background: #ffffff;
+            color: #111827;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .send-btn:disabled {
-            background: #555;
-            color: #999;
-            cursor: not-allowed;
-        }
-
-        .notice {
-            color: #aaa;
-            font-size: 12px;
-            max-width: 820px;
-            margin: 8px auto 0;
-            text-align: center;
-        }
+        .send-btn:hover { background: #e5e7eb; }
 
         @media (max-width: 768px) {
-            .sidebar {
-                display: none;
-            }
-
-            .input-area {
-                left: 0;
-            }
-
-            .cards {
-                grid-template-columns: 1fr;
-            }
-
-            .message.user .message-content,
-            .message.assistant .message-content {
-                max-width: 82%;
-            }
-
-            .model-select {
-                max-width: 95px;
-                font-size: 11px;
-                padding: 0 6px;
-            }
-
-            .mic-btn {
-                width: 36px;
-                height: 36px;
-                font-size: 16px;
-                margin-left: 6px;
-            }
+            .sidebar { display: none; }
+            .input-area { left: 0; }
         }
-
-        /* Human Approval Component */
-.approval-box {
-    max-width: 820px;
-    margin: 0 auto 20px;
-    padding: 18px 20px;
-    background: #2a2a2a;
-    border: 1px solid #eab308;
-    border-radius: 14px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
-    animation: fadeIn 0.3s ease-in-out;
-}
-
-.approval-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #eab308;
-    font-weight: 600;
-    font-size: 14px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 10px;
-}
-
-.approval-message {
-    color: #ececec;
-    font-size: 16px;
-    font-weight: 500;
-    margin-bottom: 18px;
-    line-height: 1.5;
-}
-
-.approval-actions {
-    display: flex;
-    gap: 12px;
-}
-
-.btn-approve {
-    background: #10a37f;
-    color: #ffffff;
-    border: none;
-    padding: 9px 18px;
-    border-radius: 10px;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: background 0.2s, opacity 0.2s;
-}
-
-.btn-approve:hover {
-    background: #0d8a6a;
-}
-
-.btn-reject {
-    background: #ef4444;
-    color: #ffffff;
-    border: none;
-    padding: 9px 18px;
-    border-radius: 10px;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: background 0.2s, opacity 0.2s;
-}
-
-.btn-reject:hover {
-    background: #dc2626;
-}
-
-.approval-actions button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(6px); }
-    to { opacity: 1; transform: translateY(0); }
-}
     </style>
 </head>
 
@@ -539,9 +381,7 @@
 
 <aside class="sidebar">
     <div class="brand">BappyGPT</div>
-
     <button class="new-chat" onclick="newChat()">+ New chat</button>
-
     <div class="history-title">Recent Chats</div>
     <div id="conversationList"></div>
 </aside>
@@ -553,72 +393,34 @@
     </div>
 
     <div class="chat-container" id="chatContainer">
-
         <div class="welcome" id="welcome">
             <h1>How can I help you today?</h1>
             <p>Ask questions, upload documents, use tools, search the web, and chat with memory.</p>
         </div>
-        <div id="approvalContainer"></div>
 
         <div class="cards" id="cards">
-            <div class="card" onclick="usePrompt('Search the web for latest AI agent news.')">
-                Search latest web info
-            </div>
-
-            <div class="card" onclick="usePrompt('Summarize the document I uploaded.')">
-                Summarize uploaded document
-            </div>
-
-            <div class="card" onclick="usePrompt('Remember that my channel name is dswithbappy.')">
-                Save something to memory
-            </div>
-
-            <div class="card" onclick="usePrompt('Calculate 125 * 48 / 6')">
-                Use calculator tool
-            </div>
+            <div class="card" onclick="usePrompt('Buy 10 shares of AAPL.')">Buy 10 shares of AAPL (HITL demo)</div>
+            <div class="card" onclick="usePrompt('Search the web for latest AI agent news.')">Search latest web info</div>
+            <div class="card" onclick="usePrompt('Summarize the document I uploaded.')">Summarize uploaded document</div>
+            <div class="card" onclick="usePrompt('Calculate 125 * 48 / 6')">Use calculator tool</div>
         </div>
     </div>
 
     <div class="input-area">
+        <div class="listening-indicator" id="listeningIndicator">🎙️ Listening... Speak now</div>
         <div class="input-wrapper">
+            <input type="file" id="fileInput" style="display: none;" onchange="uploadFile()">
+            <button class="icon-btn" title="Upload Document" onclick="document.getElementById('fileInput').click()">📎</button>
 
-            <input
-                type="file"
-                id="fileInput"
-                style="display: none;"
-                accept=".pdf,.docx,.txt,.md,.py,.csv"
-                onchange="uploadFile()"
-            >
+            <textarea id="messageInput" placeholder="Type here or use voice..." rows="1" oninput="autoResize(this)" onkeydown="handleKeyDown(event)"></textarea>
 
-            <button class="attach-btn" onclick="openFilePicker()" title="Upload document">
-                📎
-            </button>
-
-            <textarea
-                id="messageInput"
-                placeholder="Ask anything..."
-                rows="1"
-                oninput="autoResize(this)"
-                onkeydown="handleKeyDown(event)"
-            ></textarea>
-
-            <select id="modelSelect" class="model-select" title="Select model">
-                <option value="gemini-2.5-flash">gemini-3.5-flash-lite</option>
-                <option value="gemini-2.5-pro">gemini-2.5-pro</option>
-                <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option>
-                <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-                <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+            <select id="modelSelect" style="border:none; background:transparent; color:#9ca3af; margin-right:4px; outline:none; cursor:pointer;">
+                <option value="gemini-2.5-flash" style="background:#2f2f2f;">gemini-2.5-flash</option>
+                <option value="gemini-2.5-pro" style="background:#2f2f2f;">gemini-2.5-pro</option>
             </select>
 
-            <button class="mic-btn" id="micBtn" onclick="toggleDictation()" title="Dictate">
-                🎙️
-            </button>
-
-            <button class="send-btn" id="sendBtn" onclick="sendMessage()">➜</button>
-        </div>
-
-        <div class="notice" id="noticeText">
-            BappyGPT can make mistakes. Check important info.
+            <button class="icon-btn mic-btn" id="micBtn" title="Voice Input" onclick="toggleVoiceInput()">🎙️</button>
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()">➔</button>
         </div>
     </div>
 </main>
@@ -626,576 +428,205 @@
 <script>
     const chatContainer = document.getElementById("chatContainer");
     const messageInput = document.getElementById("messageInput");
-    const sendBtn = document.getElementById("sendBtn");
     const statusText = document.getElementById("status");
     const conversationList = document.getElementById("conversationList");
-    const modelSelect = document.getElementById("modelSelect");
-    const noticeText = document.getElementById("noticeText");
-    const micBtn = document.getElementById("micBtn");
 
-    let threadId = localStorage.getItem("thread_id");
+    let threadId = localStorage.getItem("thread_id") || crypto.randomUUID();
+    localStorage.setItem("thread_id", threadId);
 
-    if (!threadId) {
-        threadId = crypto.randomUUID();
-        localStorage.setItem("thread_id", threadId);
-    }
-
-    const savedModel = localStorage.getItem("selected_model");
-
-    if (savedModel && modelSelect) {
-        modelSelect.value = savedModel;
-    }
-
-    if (modelSelect) {
-        modelSelect.addEventListener("change", () => {
-            localStorage.setItem("selected_model", modelSelect.value);
-
-            if (noticeText) {
-                noticeText.textContent = `Selected model: ${modelSelect.value}`;
-            }
-        });
-    }
-
+    let activeToolsMap = {};
+    let currentAssistantTextNode = null;
     let recognition = null;
-    let isDictating = false;
-
-    function setupSpeechRecognition() {
-        const SpeechRecognition =
-            window.SpeechRecognition || window.webkitSpeechRecognition;
-
-        if (!SpeechRecognition) {
-            return null;
-        }
-
-        const speechRecognition = new SpeechRecognition();
-
-        speechRecognition.lang = "en-US";
-        speechRecognition.continuous = true;
-        speechRecognition.interimResults = true;
-
-        speechRecognition.onstart = () => {
-            isDictating = true;
-
-            if (micBtn) {
-                micBtn.classList.add("recording");
-                micBtn.textContent = "⏹️";
-            }
-
-            statusText.textContent = "Listening...";
-        };
-
-        speechRecognition.onresult = (event) => {
-            let finalTranscript = "";
-            let interimTranscript = "";
-
-            for (let i = event.resultIndex; i < event.results.length; i++) {
-                const transcript = event.results[i][0].transcript;
-
-                if (event.results[i].isFinal) {
-                    finalTranscript += transcript + " ";
-                } else {
-                    interimTranscript += transcript;
-                }
-            }
-
-            if (finalTranscript) {
-                const currentText = messageInput.value.trim();
-
-                messageInput.value = currentText
-                    ? currentText + " " + finalTranscript.trim()
-                    : finalTranscript.trim();
-
-                autoResize(messageInput);
-            }
-
-            if (interimTranscript && noticeText) {
-                noticeText.textContent = "Listening: " + interimTranscript;
-            }
-        };
-
-        speechRecognition.onerror = (event) => {
-            console.error("Speech recognition error:", event.error);
-
-            if (event.error === "not-allowed") {
-                alert("Microphone permission denied. Please allow microphone access.");
-            }
-
-            stopDictation();
-        };
-
-        speechRecognition.onend = () => {
-            if (isDictating) {
-                try {
-                    speechRecognition.start();
-                } catch (error) {
-                    stopDictation();
-                }
-            }
-        };
-
-        return speechRecognition;
-    }
-
-    function toggleDictation() {
-        if (!recognition) {
-            recognition = setupSpeechRecognition();
-        }
-
-        if (!recognition) {
-            alert("Speech recognition is not supported in this browser. Please use Chrome or Edge.");
-            return;
-        }
-
-        if (isDictating) {
-            stopDictation();
-        } else {
-            startDictation();
-        }
-    }
-
-    function startDictation() {
-        try {
-            recognition.start();
-        } catch (error) {
-            console.error("Could not start dictation:", error);
-        }
-    }
-
-    function stopDictation() {
-        isDictating = false;
-
-        if (recognition) {
-            try {
-                recognition.stop();
-            } catch (error) {
-                console.error("Could not stop dictation:", error);
-            }
-        }
-
-        if (micBtn) {
-            micBtn.classList.remove("recording");
-            micBtn.textContent = "🎙️";
-        }
-
-        statusText.textContent = "Ready";
-
-        if (noticeText) {
-            noticeText.textContent = "BappyGPT can make mistakes. Check important info.";
-        }
-
-        messageInput.focus();
-    }
-
-    function autoResize(textarea) {
-        textarea.style.height = "auto";
-        textarea.style.height = textarea.scrollHeight + "px";
-    }
+    let isListening = false;
 
     function hideWelcome() {
         const welcome = document.getElementById("welcome");
         const cards = document.getElementById("cards");
-
         if (welcome) welcome.style.display = "none";
         if (cards) cards.style.display = "none";
     }
 
-    function handleKeyDown(event) {
-        if (event.key === "Enter" && !event.shiftKey) {
-            event.preventDefault();
+    function autoResize(ta) {
+        ta.style.height = "auto";
+        ta.style.height = ta.scrollHeight + "px";
+    }
+
+    function handleKeyDown(e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
             sendMessage();
         }
     }
 
-    function usePrompt(text) {
-        messageInput.value = text;
+    function usePrompt(txt) {
+        messageInput.value = txt;
         autoResize(messageInput);
         messageInput.focus();
     }
 
-    function openFilePicker() {
-        document.getElementById("fileInput").click();
+    function escapeHtml(str) {
+        if (!str) return "";
+        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
 
-    function addMessage(role, content = "") {
+    function addUserMessage(content) {
         hideWelcome();
+        const row = document.createElement("div");
+        row.className = "message-row user";
+        row.innerHTML = `<div class="user-bubble">${escapeHtml(content)}</div>`;
+        chatContainer.appendChild(row);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
 
-        const messageDiv = document.createElement("div");
-        messageDiv.className = role === "user"
-            ? "message user"
-            : "message assistant";
-
+    function startAssistantMessage() {
+        hideWelcome();
+        const row = document.createElement("div");
+        row.className = "message-row assistant";
         const avatar = document.createElement("div");
-        avatar.className = role === "user"
-            ? "avatar user-avatar"
-            : "avatar bot-avatar";
+        avatar.className = "avatar avatar-bot";
+        avatar.innerText = "🤖";
+        const textDiv = document.createElement("div");
+        textDiv.className = "assistant-text";
 
-        avatar.textContent = role === "user" ? "U" : "AI";
-
-        const messageContent = document.createElement("div");
-        messageContent.className = "message-content";
-        messageContent.textContent = content;
-
-        messageDiv.appendChild(avatar);
-        messageDiv.appendChild(messageContent);
-
-        chatContainer.appendChild(messageDiv);
+        row.appendChild(avatar);
+        row.appendChild(textDiv);
+        chatContainer.appendChild(row);
         chatContainer.scrollTop = chatContainer.scrollHeight;
 
-        return messageContent;
+        return textDiv;
     }
 
-    function detectLikelyTool(message) {
-        const text = message.toLowerCase();
+    /* --- GESTION DES OUTILS & PLIAGE/DÉPLIAGE --- */
 
-        const mathPattern = /(\d+\s*[\+\-\*\/]\s*\d+)|calculate|calculation|math|solve/;
-        const ragPattern = /document|pdf|file|uploaded|summarize|summary|according to|based on/;
-        const memorySavePattern = /remember that|save this|store this|keep in memory|memorize/;
-        const memoryRecallPattern = /what do you remember|recall|my memory|remember about me/;
-
-        const webSearchPattern =
-            /latest|current|today|now|recent|news|search web|web search|internet|online|price|version|update|2025|2026|who is|what is happening|trending|release|new model|current ceo|latest version/;
-
-        if (memorySavePattern.test(text)) {
-            return "Memory Save";
-        }
-
-        if (memoryRecallPattern.test(text)) {
-            return "Memory Recall";
-        }
-
-        if (ragPattern.test(text)) {
-            return "Document Search";
-        }
-
-        if (webSearchPattern.test(text)) {
-            return "Web Search";
-        }
-
-        if (mathPattern.test(text)) {
-            return "Calculator";
-        }
-
-        return null;
-    }
-
-    function addToolProgress(toolName) {
-        const wrapper = document.createElement("div");
-        wrapper.className = "tool-progress";
-
-        const box = document.createElement("div");
-        box.className = "tool-progress-box";
-
-        const icon = document.createElement("span");
-        icon.className = "tool-spinner";
-
-        const text = document.createElement("span");
-        text.textContent = `Using ${toolName}...`;
-
-        box.appendChild(icon);
-        box.appendChild(text);
-        wrapper.appendChild(box);
-
-        chatContainer.appendChild(wrapper);
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-
-        return {
-            wrapper,
-            icon,
-            text
-        };
-    }
-
-    function completeToolProgress(toolProgress, toolName) {
-        if (!toolProgress) return;
-
-        toolProgress.icon.className = "tool-check";
-        toolProgress.icon.textContent = "✓";
-        toolProgress.text.textContent = `${toolName} completed`;
-    }
-
-    async function loadConversations() {
-        try {
-            const response = await fetch("/conversations");
-            const data = await response.json();
-
-            conversationList.innerHTML = "";
-
-            if (!data.conversations || data.conversations.length === 0) {
-                conversationList.innerHTML = `
-                    <div class="history-item">No chats yet</div>
-                `;
-                return;
-            }
-
-            data.conversations.forEach(conv => {
-                const item = document.createElement("div");
-                item.className = "history-item";
-
-                if (conv.thread_id === threadId) {
-                    item.classList.add("active");
-                }
-
-                item.textContent = conv.title || "New Chat";
-                item.onclick = () => loadConversation(conv.thread_id);
-
-                conversationList.appendChild(item);
-            });
-
-        } catch (error) {
-            console.error("Failed to load conversations:", error);
+    function toggleTool(headerEl) {
+        const box = headerEl.closest(".tool-box");
+        const content = box.querySelector(".tool-content");
+        
+        if (content.style.display === "none") {
+            content.style.display = "block";
+            headerEl.classList.remove("collapsed");
+        } else {
+            content.style.display = "none";
+            headerEl.classList.add("collapsed");
         }
     }
 
-    async function loadConversation(selectedThreadId) {
-        threadId = selectedThreadId;
-        localStorage.setItem("thread_id", threadId);
-
-        try {
-            const response = await fetch(`/history/${threadId}`);
-            const data = await response.json();
-
-            chatContainer.innerHTML = "";
-
-            if (!data.messages || data.messages.length === 0) {
-                renderWelcome();
-                await loadConversations();
-                return;
-            }
-
-            data.messages.forEach(msg => {
-                addMessage(
-                    msg.role === "user" ? "user" : "assistant",
-                    msg.content
-                );
-            });
-
-            await loadConversations();
-
-        } catch (error) {
-            console.error("Failed to load conversation:", error);
-        }
-    }
-
-    function renderWelcome() {
-        chatContainer.innerHTML = `
-            <div class="welcome" id="welcome">
-                <h1>How can I help you today?</h1>
-                <p>Ask questions, upload documents, use tools, search the web, and chat with memory.</p>
-            </div>
-
-            <div class="cards" id="cards">
-                <div class="card" onclick="usePrompt('Search the web for latest AI agent news.')">
-                    Search latest web info
+    function renderToolStart(toolName) {
+        hideWelcome();
+        const row = document.createElement("div");
+        row.className = "message-row tool-row";
+        row.innerHTML = `
+            <div class="avatar avatar-tool">🤖</div>
+            <div class="tool-box">
+                <div class="tool-header" onclick="toggleTool(this)">
+                    <span class="tool-chevron">▼</span>
+                    <span>⚙️ Running tool: <strong style="color:#10b981;">${escapeHtml(toolName)}</strong>...</span>
                 </div>
-
-                <div class="card" onclick="usePrompt('Summarize the document I uploaded.')">
-                    Summarize uploaded document
-                </div>
-
-                <div class="card" onclick="usePrompt('Remember that my channel name is dswithbappy.')">
-                    Save something to memory
-                </div>
-
-                <div class="card" onclick="usePrompt('Calculate 125 * 48 / 6')">
-                    Use calculator tool
+                <div class="tool-content" style="display: block;">
+                    <em>Executing action...</em>
                 </div>
             </div>
         `;
+        chatContainer.appendChild(row);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+        activeToolsMap[toolName] = row.querySelector(".tool-box");
     }
 
-    function parseSSEPart(part) {
-        const lines = part
-            .split(/\r?\n/)
-            .filter(line => line.trim().startsWith("data:"));
+    function renderToolEnd(toolName, result) {
+        let box = activeToolsMap[toolName];
 
-        if (lines.length === 0) {
-            return null;
-        }
-
-        const jsonText = lines
-            .map(line => line.replace(/^data:\s*/, ""))
-            .join("\n")
-            .trim();
-
-        if (!jsonText || jsonText === "[DONE]") {
-            return null;
-        }
-
-        try {
-            return JSON.parse(jsonText);
-        } catch (error) {
-            console.error("Invalid stream JSON:", jsonText, error);
-            return null;
-        }
-    }
-
-    async function sendMessage() {
-        const message = messageInput.value.trim();
-
-        if (!message) return;
-
-        if (isDictating) {
-            stopDictation();
-        }
-
-        const selectedModel = modelSelect ? modelSelect.value : "gemini-2.5-flash";
-
-        addMessage("user", message);
-
-        messageInput.value = "";
-        messageInput.style.height = "auto";
-
-        sendBtn.disabled = true;
-        statusText.textContent = `Thinking with ${selectedModel}...`;
-
-        const likelyTool = detectLikelyTool(message);
-        let toolProgress = null;
-
-        if (likelyTool) {
-            toolProgress = addToolProgress(likelyTool);
-            statusText.textContent = `Using ${likelyTool}...`;
-        }
-
-        const botElement = addMessage("assistant", "");
-
-        let firstTokenReceived = false;
-
-        function handleStreamData(data) {
-            if (!data) return;
-
-            if (data.token !== undefined && data.token !== null) {
-                if (!firstTokenReceived) {
-                    firstTokenReceived = true;
-
-                    if (likelyTool && toolProgress) {
-                        completeToolProgress(toolProgress, likelyTool);
-                    }
-
-                    statusText.textContent = `Generating with ${selectedModel}...`;
-                }
-
-                botElement.textContent += data.token;
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-            }
-
-            if (data.error) {
-                if (likelyTool && toolProgress) {
-                    completeToolProgress(toolProgress, likelyTool);
-                }
-
-                botElement.textContent += "\n\nError: " + data.error;
-                statusText.textContent = "Ready";
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-            }
-
-            if (data.done) {
-                if (likelyTool && toolProgress && !firstTokenReceived) {
-                    completeToolProgress(toolProgress, likelyTool);
-                }
-
-                statusText.textContent = "Ready";
-            }
-        }
-
-        try {
-            const response = await fetch("/chat/stream", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    message: message,
-                    thread_id: threadId,
-                    model: selectedModel
-                })
-            });
-
-            if (!response.ok) {
-                let errorText = "Request failed.";
-
-                try {
-                    const errorData = await response.json();
-                    errorText = errorData.detail || errorData.message || errorText;
-                } catch (error) {
-                    console.error("Could not parse error response:", error);
-                }
-
-                botElement.textContent = errorText;
-                return;
-            }
-
-            if (!response.body) {
-                botElement.textContent = "Streaming is not supported by this browser.";
-                return;
-            }
-
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder("utf-8");
-
-            let buffer = "";
-
-            while (true) {
-                const { value, done } = await reader.read();
-
-                if (done) {
+        // Fallback: Si la référence n'existe plus en mémoire JS, cherche le dernier bloc "Running tool"
+        if (!box) {
+            const allBoxes = document.querySelectorAll(".tool-box");
+            for (let i = allBoxes.length - 1; i >= 0; i--) {
+                const header = allBoxes[i].querySelector(".tool-header");
+                if (header && (header.textContent.includes("Running tool") || header.textContent.includes("Awaiting"))) {
+                    box = allBoxes[i];
                     break;
                 }
-
-                buffer += decoder.decode(value, { stream: true });
-
-                const parts = buffer.split(/\r?\n\r?\n/);
-                buffer = parts.pop() || "";
-
-                for (const part of parts) {
-                    const data = parseSSEPart(part);
-                    handleStreamData(data);
-                }
             }
-
-            /*
-                Important fix:
-                Sometimes the final streamed response does not end with "\n\n".
-                In that case, the final data remains inside buffer.
-                This part makes sure the leftover buffer is also displayed.
-            */
-            buffer += decoder.decode();
-
-            if (buffer.trim()) {
-                const data = parseSSEPart(buffer);
-                handleStreamData(data);
-            }
-
-        } catch (error) {
-            console.error("Streaming error:", error);
-
-            if (likelyTool && toolProgress) {
-                completeToolProgress(toolProgress, likelyTool);
-            }
-
-            botElement.textContent = "Something went wrong: " + error.message;
-
-        } finally {
-            sendBtn.disabled = false;
-            statusText.textContent = "Ready";
-            messageInput.focus();
-
-            await loadConversations();
         }
+
+        if (box) {
+            const header = box.querySelector(".tool-header");
+            const content = box.querySelector(".tool-content");
+
+            if (header) {
+                header.className = "tool-header collapsed";
+                header.innerHTML = `
+                    <span class="tool-chevron">▼</span>
+                    <span>✅ Tool finished</span>
+                `;
+            }
+
+            if (content) {
+                content.style.display = "none";
+                content.innerHTML = `<strong>Output:</strong><pre class="tool-output-text">${escapeHtml(result)}</pre>`;
+            }
+        }
+
+        delete activeToolsMap[toolName];
+        chatContainer.scrollTop = chatContainer.scrollHeight;
     }
+
+    /* --- HUMAN-IN-THE-LOOP (HITL) CARD --- */
+
+    function renderHITLApprovalCard(message) {
+        hideWelcome();
+        
+        // 1. Fermer/Nettoyer les blocs d'outils restés en cours d'exécution
+        const allBoxes = document.querySelectorAll(".tool-box");
+        allBoxes.forEach(box => {
+            const header = box.querySelector(".tool-header");
+            if (header && header.textContent.includes("Running tool")) {
+                header.className = "tool-header collapsed";
+                header.innerHTML = `<span class="tool-chevron">▼</span><span>⏸️ Action interrupted - Awaiting confirmation</span>`;
+                const content = box.querySelector(".tool-content");
+                if (content) content.style.display = "none";
+            }
+        });
+
+        // 2. Création de la carte de validation HITL
+        const card = document.createElement("div");
+        card.className = "hitl-box";
+        card.id = "activeHITLCard";
+        card.innerHTML = `
+            <div class="hitl-header">⚠️ Human Approval Required</div>
+            <div class="hitl-body">${escapeHtml(message || "An action requires your confirmation to proceed.")}</div>
+            <div class="hitl-actions">
+                <button class="hitl-btn hitl-btn-approve" onclick="handleHITLDecision('Yes, proceed')">✅ Approve</button>
+                <button class="hitl-btn hitl-btn-reject" onclick="handleHITLDecision('No, cancel action')">❌ Decline</button>
+            </div>
+        `;
+        chatContainer.appendChild(card);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    function handleHITLDecision(decisionText) {
+        const card = document.getElementById("activeHITLCard");
+        if (card) {
+            const buttons = card.querySelectorAll("button");
+            buttons.forEach(b => b.disabled = true);
+            card.style.opacity = "0.7";
+        }
+        sendDirectMessage(decisionText);
+    }
+
+    /* --- UPLOAD DE FICHIER --- */
 
     async function uploadFile() {
         const fileInput = document.getElementById("fileInput");
-
-        if (!fileInput.files.length) {
-            return;
-        }
+        if (!fileInput.files || fileInput.files.length === 0) return;
 
         const file = fileInput.files[0];
+        hideWelcome();
 
-        addMessage("user", `📎 Uploaded document: ${file.name}`);
+        const userRow = document.createElement("div");
+        userRow.className = "message-row user";
+        userRow.innerHTML = `<div class="user-bubble">📎 Uploaded document: <strong>${escapeHtml(file.name)}</strong></div>`;
+        chatContainer.appendChild(userRow);
 
-        const toolProgress = addToolProgress("Document Ingestion");
-        statusText.textContent = "Using Document Ingestion...";
+        statusText.textContent = "Uploading & Indexing...";
 
         const formData = new FormData();
         formData.append("file", file);
@@ -1209,220 +640,231 @@
 
             const data = await response.json();
 
-            completeToolProgress(toolProgress, "Document Ingestion");
-
-            if (data.success) {
-                addMessage(
-                    "assistant",
-                    data.message + "\n\nYou can now ask questions about this document."
-                );
-
-                await loadConversations();
+            if (response.ok && data.success) {
+                const assistantRow = document.createElement("div");
+                assistantRow.className = "message-row assistant";
+                assistantRow.innerHTML = `
+                    <div class="avatar avatar-bot">🤖</div>
+                    <div class="assistant-text">
+                        <div class="ingestion-badge">✓ Document Ingestion completed</div><br>
+                        Le document <strong>${escapeHtml(file.name)}</strong> a été indexé avec succès. Posez-moi vos questions dessus !
+                    </div>
+                `;
+                chatContainer.appendChild(assistantRow);
             } else {
-                addMessage("assistant", "Upload failed: " + data.message);
+                showUploadError(data.message || "Erreur de chargement du fichier.");
             }
+        } catch (err) {
+            showUploadError("Erreur réseau / serveur: " + err.message);
+        } finally {
+            statusText.textContent = "Ready";
+            fileInput.value = "";
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+    }
 
-        } catch (error) {
-            completeToolProgress(toolProgress, "Document Ingestion");
-            addMessage("assistant", "Upload failed: " + error.message);
+    function showUploadError(errMsg) {
+        const assistantRow = document.createElement("div");
+        assistantRow.className = "message-row assistant";
+        assistantRow.innerHTML = `
+            <div class="avatar avatar-bot">🤖</div>
+            <div class="assistant-text" style="color: #f87171;">
+                <strong>Upload failed:</strong> ${escapeHtml(errMsg)}
+            </div>
+        `;
+        chatContainer.appendChild(assistantRow);
+    }
+
+    /* --- RECONNAISSANCE VOCALE --- */
+
+    function initSpeechRecognition() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            alert("Votre navigateur ne supporte pas la reconnaissance vocale.");
+            return null;
         }
 
-        statusText.textContent = "Ready";
-        fileInput.value = "";
+        const rec = new SpeechRecognition();
+        rec.continuous = true;
+        rec.interimResults = true;
+        rec.lang = 'en-US';
+
+        rec.onstart = () => {
+            isListening = true;
+            updateMicUI(true);
+        };
+
+        rec.onresult = (event) => {
+            let transcript = "";
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                transcript += event.results[i][0].transcript;
+            }
+            messageInput.value = transcript;
+            autoResize(messageInput);
+            document.getElementById("listeningIndicator").textContent = "Listening: " + transcript;
+        };
+
+        rec.onerror = (event) => {
+            console.error("Speech error:", event.error);
+            stopListening();
+        };
+
+        rec.onend = () => { stopListening(); };
+        return rec;
     }
 
-    async function newChat() {
-        threadId = crypto.randomUUID();
-        localStorage.setItem("thread_id", threadId);
+    function toggleVoiceInput() {
+        if (!recognition) recognition = initSpeechRecognition();
+        if (!recognition) return;
 
-        if (isDictating) {
-            stopDictation();
+        if (isListening) {
+            stopListening();
+        } else {
+            try { recognition.start(); } catch (e) {}
         }
-
-        renderWelcome();
-        await loadConversations();
-        messageInput.focus();
     }
 
-    loadConversations();
-
-    if (threadId) {
-        loadConversation(threadId);
-    }
-
-    // =====================================================================
-// FONCTIONS JAVASCRIPT À AJOUTER / METTRE À JOUR
-// =====================================================================
-function showApprovalRequest(message, targetThreadId) {
-    hideWelcome();
-
-    // Supprime tout composant d'approbation existant
-    const existingBox = document.getElementById("activeApprovalBox");
-    if (existingBox) existingBox.remove();
-
-    const approvalDiv = document.createElement("div");
-    approvalDiv.className = "approval-box";
-    approvalDiv.id = "activeApprovalBox";
-
-    approvalDiv.innerHTML = `
-        <div class="approval-header">
-            ⚠️ Human Approval Required
-        </div>
-        <div class="approval-message">
-            ${message}
-        </div>
-        <div class="approval-actions">
-            <button class="btn-approve" onclick="sendApproval('yes', '${targetThreadId}')">
-                ✓ Approve
-            </button>
-            <button class="btn-reject" onclick="sendApproval('no', '${targetThreadId}')">
-                ✕ Reject
-            </button>
-        </div>
-    `;
-
-    chatContainer.appendChild(approvalDiv);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-}
-
-async function sendApproval(decision, targetThreadId) {
-    const approvalBox = document.getElementById("activeApprovalBox");
-    if (approvalBox) {
-        const buttons = approvalBox.querySelectorAll("button");
-        buttons.forEach(btn => btn.disabled = true);
-    }
-
-    statusText.textContent = "Processing decision...";
-
-    try {
-        const response = await fetch("/approve", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                thread_id: targetThreadId,
-                decision: decision,
-                model: modelSelect ? modelSelect.value : "gemini-2.5-flash"
-            })
-        });
-
-        const data = await response.json();
-
-        if (approvalBox) {
-            approvalBox.remove();
+    function stopListening() {
+        isListening = false;
+        if (recognition) {
+            try { recognition.stop(); } catch(e){}
         }
-
-        if (data.success && data.message) {
-            addMessage("assistant", data.message);
-        } else if (data.error) {
-            addMessage("assistant", `Error: ${data.error}`);
-        }
-    } catch (error) {
-        console.error("Approval error:", error);
-        if (approvalBox) approvalBox.remove();
-        addMessage("assistant", "An error occurred while processing the approval.");
-    } finally {
-        statusText.textContent = "Ready";
-        sendBtn.disabled = false;
+        updateMicUI(false);
     }
-}
 
-async function sendMessage() {
-    const text = messageInput.value.trim();
-    if (!text) return;
+    function updateMicUI(listening) {
+        const micBtn = document.getElementById("micBtn");
+        const indicator = document.getElementById("listeningIndicator");
+        if (listening) {
+            micBtn.classList.add("active");
+            indicator.style.display = "block";
+        } else {
+            micBtn.classList.remove("active");
+            indicator.style.display = "none";
+        }
+    }
 
-    hideWelcome();
-    addMessage("user", text);
+    /* --- ENVOI DE MESSAGES --- */
 
-    messageInput.value = "";
-    autoResize(messageInput);
-    sendBtn.disabled = true;
-    statusText.textContent = "Thinking...";
+    function sendMessage() {
+        const text = messageInput.value.trim();
+        if (!text) return;
+        messageInput.value = "";
+        autoResize(messageInput);
+        sendDirectMessage(text);
+    }
 
-    // Ne PAS créer le nœud assistant immédiatement pour éviter l'avatar vide
-    let assistantContentNode = null;
+    async function sendDirectMessage(text) {
+        if (isListening) stopListening();
 
-    try {
-        const response = await fetch("/chat/stream", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                message: text,
-                thread_id: threadId,
-                model: modelSelect ? modelSelect.value : "gemini-2.5-flash"
-            })
-        });
+        addUserMessage(text);
+        statusText.textContent = "Thinking...";
 
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
+        currentAssistantTextNode = null;
+        activeToolsMap = {};
 
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
+        try {
+            const res = await fetch("/chat/stream", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    message: text,
+                    thread_id: threadId,
+                    model: document.getElementById("modelSelect").value
+                })
+            });
 
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split("\n\n");
-            buffer = lines.pop();
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = "";
 
-            for (const line of lines) {
-                if (line.startsWith("data: ")) {
-                    const jsonStr = line.replace("data: ", "").trim();
-                    if (!jsonStr) continue;
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
 
-                    try {
-                        const payload = JSON.parse(jsonStr);
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split("\n\n");
+                buffer = lines.pop();
 
-                        // 1. Détection de l'interruption
-                        if (payload.interrupt) {
-                            if (assistantContentNode) {
-                                const parentMsg = assistantContentNode.closest(".message.assistant");
-                                if (parentMsg) parentMsg.remove();
+                for (const line of lines) {
+                    if (line.startsWith("data: ")) {
+                        const payload = JSON.parse(line.replace("data: ", ""));
+
+                        if (payload.type === "tool_start") {
+                            renderToolStart(payload.tool);
+                        } else if (payload.type === "tool_end") {
+                            renderToolEnd(payload.tool, payload.result);
+                        } else if (payload.type === "interrupt") {
+                            renderHITLApprovalCard(payload.message);
+                        } else if (payload.type === "token") {
+                            if (!currentAssistantTextNode) {
+                                currentAssistantTextNode = startAssistantMessage();
                             }
-                            showApprovalRequest(payload.message, payload.thread_id || threadId);
-                            statusText.textContent = "Awaiting Approval";
-                            return;
-                        }
-
-                        // 2. Token de réponse normal (création à la demande)
-                        if (payload.token) {
-                            if (!assistantContentNode) {
-                                assistantContentNode = addMessage("assistant", "");
-                            }
-                            assistantContentNode.textContent += payload.token;
+                            currentAssistantTextNode.textContent += payload.token;
                             chatContainer.scrollTop = chatContainer.scrollHeight;
                         }
-
-                        // 3. Gestion des erreurs
-                        if (payload.error) {
-                            if (!assistantContentNode) {
-                                assistantContentNode = addMessage("assistant", "");
-                            }
-                            assistantContentNode.textContent += `\n[Error: ${payload.error}]`;
-                        }
-                    } catch (err) {
-                        console.error("SSE parse error:", err);
                     }
                 }
             }
-        }
-    } catch (err) {
-        console.error("Stream fetch error:", err);
-        if (!assistantContentNode) {
-            assistantContentNode = addMessage("assistant", "");
-        }
-        assistantContentNode.textContent = "Failed to communicate with the server.";
-    } finally {
-        sendBtn.disabled = false;
-        if (statusText.textContent !== "Awaiting Approval") {
+        } catch (err) {
+            console.error(err);
+        } finally {
             statusText.textContent = "Ready";
+            loadConversations();
         }
     }
-}
-</script>
 
+    async function loadConversations() {
+        try {
+            const res = await fetch("/conversations");
+            const data = await res.json();
+            conversationList.innerHTML = "";
+            (data.conversations || []).forEach(conv => {
+                const item = document.createElement("div");
+                item.className = "history-item" + (conv.thread_id === threadId ? " active" : "");
+                item.textContent = conv.title || "Chat";
+                item.onclick = () => loadConversation(conv.thread_id);
+                conversationList.appendChild(item);
+            });
+        } catch (e) {}
+    }
+
+    async function loadConversation(id) {
+        threadId = id;
+        localStorage.setItem("thread_id", threadId);
+        const res = await fetch(`/history/${threadId}`);
+        const data = await res.json();
+        chatContainer.innerHTML = "";
+
+        if (!data.messages || data.messages.length === 0) {
+            newChat();
+            return;
+        }
+
+        data.messages.forEach(m => {
+            if (m.role === "user") addUserMessage(m.content);
+            else {
+                const t = startAssistantMessage();
+                t.textContent = m.content;
+            }
+        });
+        loadConversations();
+    }
+
+    function newChat() {
+        threadId = crypto.randomUUID();
+        localStorage.setItem("thread_id", threadId);
+        chatContainer.innerHTML = `
+            <div class="welcome" id="welcome">
+                <h1>How can I help you today?</h1>
+                <p>Ask questions, upload documents, use tools, search the web, and chat with memory.</p>
+            </div>
+        `;
+        loadConversations();
+    }
+
+    loadConversations();
+    if (threadId) loadConversation(threadId);
+</script>
 </body>
 </html>
