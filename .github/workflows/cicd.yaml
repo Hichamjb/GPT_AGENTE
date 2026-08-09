@@ -1,4 +1,4 @@
-name: Fastapi AWS CI/CD
+name: Deploy FastAPI Docker Image
 
 on:
   push:
@@ -7,10 +7,8 @@ on:
     paths-ignore:
       - "README.md"
 
-  # Allows you to run the workflow manually
   workflow_dispatch:
 
-# Prevent two deployments from running at the same time
 concurrency:
   group: agentic-chatbot-production
   cancel-in-progress: true
@@ -19,9 +17,7 @@ permissions:
   contents: read
 
 jobs:
-  # ============================================================
-  # 1. CONTINUOUS INTEGRATION
-  # ============================================================
+
   integration:
     name: Continuous Integration
     runs-on: ubuntu-latest
@@ -38,10 +34,6 @@ jobs:
         run: |
           echo "Running unit tests"
 
-
-  # ============================================================
-  # 2. BUILD AND PUSH IMAGE TO DOCKER HUB
-  # ============================================================
   push_to_registry:
     name: Build and Push Docker Image
     needs: integration
@@ -89,10 +81,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-
-  # ============================================================
-  # 3. DEPLOY TO AWS EC2 SELF-HOSTED RUNNER
-  # ============================================================
   continuous_deployment:
     name: Deploy to AWS EC2
     needs: push_to_registry
@@ -104,53 +92,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Validate application secrets
-        env:
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
-          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
-          LANGSMITH_TRACING: ${{ secrets.LANGSMITH_TRACING }}
-          LANGSMITH_ENDPOINT: ${{ secrets.LANGSMITH_ENDPOINT }}
-          LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
-          LANGSMITH_PROJECT: ${{ secrets.LANGSMITH_PROJECT }}
-        run: |
-          if [ -z "$GOOGLE_API_KEY" ]; then
-            echo "GOOGLE_API_KEY secret is missing."
-            exit 1
-          fi
-
-          if [ -z "$TAVILY_API_KEY" ]; then
-            echo "TAVILY_API_KEY secret is missing."
-            exit 1
-          fi
-
-          if [ -z "$OPENWEATHER_API_KEY" ]; then
-            echo "OPENWEATHER_API_KEY secret is missing."
-            exit 1
-          fi
-
-          if [ -z "$LANGSMITH_TRACING" ]; then
-            echo "LANGSMITH_TRACING secret is missing."
-            exit 1
-          fi
-
-          if [ -z "$LANGSMITH_ENDPOINT" ]; then
-            echo "LANGSMITH_ENDPOINT secret is missing."
-            exit 1
-          fi
-
-          if [ -z "$LANGSMITH_API_KEY" ]; then
-            echo "LANGSMITH_API_KEY secret is missing."
-            exit 1
-          fi
-
-          if [ -z "$LANGSMITH_PROJECT" ]; then
-            echo "LANGSMITH_PROJECT secret is missing."
-            exit 1
-          fi
-
-          echo "All required application secrets are configured."
 
       - name: Pull latest Docker image
         env:
