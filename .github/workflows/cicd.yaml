@@ -1,0 +1,74 @@
+name: Deploy FastAPI Docker Image
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+
+  Continuous-Integration:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/agentic-chatbot:latest .
+
+      - name: Push Docker image to Docker Hub
+        run: |
+          docker push \
+            ${{ secrets.DOCKERHUB_USERNAME }}/agentic-chatbot:latest
+
+
+  Continuous-Deployment:
+    needs: Continuous-Integration
+    runs-on: self-hosted
+
+    steps:
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Pull latest Docker image
+        run: |
+          docker pull \
+            ${{ secrets.DOCKERHUB_USERNAME }}/agentic-chatbot:latest
+
+      - name: Stop old container
+        run: |
+          docker stop agentic-chatbot || true
+          docker rm agentic-chatbot || true
+
+      - name: Run new container
+        run: |
+          docker run -d \
+            --name agentic-chatbot \
+            --restart always \
+            -p 8080:8080 \
+            -e GOOGLE_API_KEY="${{ secrets.GOOGLE_API_KEY }}" \
+            -e GOOGLE_MODEL="${{ secrets.GOOGLE_MODEL }}" \
+            -e TAVILY_API_KEY="${{ secrets.TAVILY_API_KEY }}" \
+            -e LANGSMITH_TRACING="${{ secrets.LANGSMITH_TRACING }}" \
+            -e LANGSMITH_ENDPOINT="${{ secrets.LANGSMITH_ENDPOINT }}" \
+            -e LANGSMITH_API_KEY="${{ secrets.LANGSMITH_API_KEY }}" \
+            -e LANGSMITH_PROJECT="${{ secrets.LANGSMITH_PROJECT }}" \
+            ${{ secrets.DOCKERHUB_USERNAME }}/agentic-chatbot:latest
+
+      - name: Clean unused Docker images
+        run: |
+          docker image prune -f
